@@ -1,20 +1,24 @@
 'use strict';
 
+const util = require('util');
+
 /**
  * Main command loop. All player input after login goes through here.
- * If you want to swap out the command parser this is the place to do it
+ * If you want to swap out the command parser this is the place to do it.
  */
-module.exports = (src) => {
-  const { CommandParser, InvalidCommandError, RestrictedCommandError } = require(src + 'CommandParser');
-  const PlayerRoles = require(src + 'PlayerRoles');
-  const CommandTypes = require(src + 'CommandType');
-  const Broadcast = require(src + 'Broadcast');
-  const Logger = require(src + 'Logger');
+module.exports = (srcPath) => {
+  const bundlePath = srcPath + "../bundles";
+  const { CommandParser, InvalidCommandError, RestrictedCommandError } = require(srcPath + 'CommandParser');
+  const PlayerRoles = require(srcPath + 'PlayerRoles');
+  const CommandTypes = require(srcPath + 'CommandType');
+  const Broadcast = require(srcPath + 'Broadcast');
+  const Logger = require(srcPath + 'Logger');
+  const bundle = require('../../tinymu-lib/lib/common').bundle(__filename);
 
   return {
     event: state => player => {
       player.socket.once('data', data => {
-        function loop () {
+        function loop() {
           player.socket.emit('commands', player);
         }
         data = data.toString().trim();
@@ -24,6 +28,18 @@ module.exports = (src) => {
         }
 
         player._lastCommandTime = Date.now();
+
+        Logger.verbose(`Got '${data}'`);
+
+        const punct = '`~!@#$%^&*()-_=+[]{}\\|;:\'",.<>/?';
+        // IF the first char is a punctuation char
+        // AND that char is a command
+        // THEN split first word into char and restofword
+        //if(punct.includes(data[0]) && state.CommandManager.get(data[0])) {
+        if(punct.includes(data[0]) && CommandParser.parse(state, data[0], player)) {
+          data = data.split(data[0], 2).join(data[0] + ' ');
+          Logger.verbose(`Has punct: '${data}'`);
+        }
 
         try {
           const result = CommandParser.parse(state, data, player);
@@ -52,7 +68,7 @@ module.exports = (src) => {
               // See bundles/ranvier-player-events/player-events.js commandQueued and updateTick for when these
               // actually get executed
               player.queueCommand({
-                execute: _ => {
+                execute: () => {
                   player.emit('useAbility', result.skill, result.args);
                 },
                 label: data,
@@ -69,7 +85,7 @@ module.exports = (src) => {
               if (roomCommands && roomCommands.includes(commandName)) {
                 player.room.emit('command', player, commandName, args.join(' '));
               } else {
-                Broadcast.sayAt(player, "Huh?");
+                Broadcast.sayAt(player, 'Huh?  (Type "help" for help.)');
                 Logger.warn(`WARNING: Player tried non-existent command '${data}'`);
               }
               break;
@@ -84,6 +100,6 @@ module.exports = (src) => {
         Broadcast.prompt(player);
         loop();
       });
-    }
+    },
   };
 };
