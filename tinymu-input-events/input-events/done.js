@@ -1,15 +1,27 @@
 'use strict';
 
+const util = require('util');
 
 /**
- * Login is done, allow the player to actually execute commands
+ * Done event -- Login is done, allow the player to actually execute commands
  */
 module.exports = (srcPath) => {
-  const Broadcast = require(srcPath + 'Broadcast');
   const Logger = require(srcPath + 'Logger');
+  const bundle = require('../../tinymu-lib/lib/common').bundle(__filename);
+  const deferModule = require('../../tinymu-lib/lib/common').deferModule(__filename);
+  const Broadcast = require(srcPath + 'Broadcast');
 
   return {
     event: state => (socket, args) => {
+      if(deferModule) {
+        Logger.verbose(`${bundle.name}: ${bundle.module}: deferring`);
+        return(false);
+      }
+      Logger.verbose(`${bundle.name}: ${bundle.module}`);
+      // Logger.verbose(`${bundle.module}: state args: ${util.inspect(args)}`);
+
+      const remoteAddress = socket.socket.socket.remoteAddress;
+      const remotePort = socket.socket.socket.remotePort;
       let player = args.player;
       player.hydrate(state);
 
@@ -18,10 +30,15 @@ module.exports = (srcPath) => {
 
       player.save();
 
+      Logger.log(`Login: ${player.name} from ${remoteAddress}:${remotePort}`);
+
+      // for "who" output
+      player.connectTime = Date.now();
+
       player._lastCommandTime = Date.now();
 
       player.socket.on('close', () => {
-        Logger.log(player.name + ' has gone linkdead.');
+        Logger.log(`Disconnect: ${player.name} from ${remoteAddress}:${remotePort}`);
         // TODO: try to fetch the person the player is fighting and dereference the player
         //if (player.inCombat.inCombat) {
         //  player.inCombat.inCombat = null;
@@ -38,8 +55,6 @@ module.exports = (srcPath) => {
 
       // All that shit done, let them play!
       player.socket.emit('commands', player);
-
-      player.emit('login');
-    }
+    },
   };
 };
