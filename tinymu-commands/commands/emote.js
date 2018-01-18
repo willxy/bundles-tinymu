@@ -1,17 +1,23 @@
 'use strict';
 
+const util = require('util');
+
 module.exports = (srcPath) => {
   const Broadcast = require(srcPath + 'Broadcast');
   const Parser = require(srcPath + 'CommandParser').CommandParser;
+  const Logger = require(srcPath + 'Logger');
 
   return {
     usage: 'emote <message>',
-    aliases: [':'],
-    command: (state) => (args, player) => {
+    aliases: [':', 'pose', ';'],
+    command: (state) => (args, player, originalCommand) => {
       args = args.trim();
 
+      // Logger.verbose(`originalCommand: ${originalCommand}`);
+
       if (!args.length) {
-        return Broadcast.sayAt(player, 'Yes, but what do you want to emote?');
+        // return Broadcast.sayAt(player, 'Yes, but what do you want to emote?');
+        // return Broadcast.sayAt(player, 'Yes but what is it that you ____?');
       }
 
       const FIND_TARGETS_REGEXP = /~((?:\d+\.)?[^\s.,!?"']+)/gi;
@@ -31,13 +37,14 @@ module.exports = (srcPath) => {
       }
 
       // Replace the initial emote message with the found targets and broadcast to the room.
+      const separator = originalCommand==';' ? '' : ' ';
       const emoteMessage = matchedTargets
-        .reduce((string, target) => string.replace(REPLACE_TARGETS_REGEXP, target.name), `${player.name} ${args}`)
-        .replace(/([^.?!])$/, '$1.');  // Enforce punctuation
+        .reduce((string, target) => string.replace(REPLACE_TARGETS_REGEXP, target.name), `${player.name}${separator}${args}`)
+        .replace(/([^.?! ])$/, '$1.');  // Enforce punctuation
 
       player.room.players.forEach(presentPlayer => {
         if (presentPlayer === player) {
-          Broadcast.sayAt(player, `You emote "${emoteMessage}"`);
+          Broadcast.sayAt(player, `${emoteMessage}`);
         } else {
           Broadcast.sayAt(presentPlayer, emoteMessage.replace(presentPlayer.name, 'you'));
         }
