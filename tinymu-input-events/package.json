@@ -1,0 +1,15 @@
+{
+  "name": "tinymu-input-events",
+  "version": "1.0.0",
+  "description": "tinymu* style login bundle for ranvier mud",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willxy/bundles-tinymu"
+  },
+  "author": "Will <will@will.systems>",
+  "license": "MIT",
+  "dependencies": {
+    "sprintf-js": "^1.1.1"
+  }
+}
