@@ -1,22 +1,30 @@
 'use strict';
 
-const util = require('util');
+// const util = require('util');
 
 /**
  * Main command loop. All player input after login goes through here.
  * If you want to swap out the command parser this is the place to do it.
  */
 module.exports = (srcPath) => {
-  const bundlePath = srcPath + "../bundles";
+  // const bundlePath = srcPath + "../bundles";
   const { CommandParser, InvalidCommandError, RestrictedCommandError } = require(srcPath + 'CommandParser');
   const PlayerRoles = require(srcPath + 'PlayerRoles');
   const CommandTypes = require(srcPath + 'CommandType');
   const Broadcast = require(srcPath + 'Broadcast');
   const Logger = require(srcPath + 'Logger');
   const bundle = require('../../tinymu-lib/lib/common').bundle(__filename);
+  const deferModule = require('../../tinymu-lib/lib/common').deferModule(__filename);
 
   return {
     event: state => player => {
+      if(deferModule) {
+        Logger.verbose(`${bundle.name}: ${bundle.module}: deferring`);
+        return(false);
+      }
+      Logger.verbose(`${bundle.name}: ${bundle.module}`);
+      // Logger.verbose(`${bundle.module}: state args: ${util.inspect(args)}`);
+
       player.socket.once('data', data => {
         function loop() {
           player.socket.emit('commands', player);
