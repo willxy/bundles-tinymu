@@ -1,0 +1,13 @@
+.*.swp
+.swp
+node_modules
+yarn.lock
+backup
+tmp
+old
+orig
+not
+prior
+
+ranvier-*
+*-tinymu
