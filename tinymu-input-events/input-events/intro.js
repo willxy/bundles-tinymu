@@ -1,20 +1,28 @@
 'use strict';
 
+const util = require('util');
+
 /**
- * MOTD event
+ * Intro event -- initial network connection
  */
 module.exports = (srcPath) => {
-  const Data = require(srcPath + 'Data');
-  const EventUtil = require(srcPath + 'EventUtil');
+  const Logger = require(srcPath + 'Logger');
+  const bundle = require('../../tinymu-lib/lib/common').bundle(__filename);
+  const deferModule = require('../../tinymu-lib/lib/common').deferModule(__filename);
 
   return {
-    event: state => socket => {
-      const motd = Data.loadMotd();
-      if (motd) {
-        EventUtil.genSay(socket)(motd);
+    event: state => (socket, args) => {
+      if(deferModule) {
+        Logger.verbose(`${bundle.name}: ${bundle.module}: deferring`);
+        return(false);
       }
+      Logger.verbose(`${bundle.name}: ${bundle.module}`);
+      Logger.verbose(`${bundle.module}: state args: ${util.inspect(args)}`);
 
-      return socket.emit('login', socket);
-    }
+      if(args==undefined)
+        args = {};
+
+      return socket.emit('motd', socket, args);
+    },
   };
 };
