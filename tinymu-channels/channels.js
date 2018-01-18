@@ -20,17 +20,18 @@ module.exports = (srcPath) => {
 
     new Channel({
       name: 'say',
+      aliases: ['"', "'"],
       color: ['yellow'],
       description: 'Send a message to all players in your room',
       audience: new RoomAudience(),
-      minRequiredRole: PlayerRoles.ADMIN,
+      // minRequiredRole: PlayerRoles.ADMIN,
       formatter: {
         sender: function (sender, target, message, colorify) {
-          return colorify(`You say: '${message}'`);
+          return colorify(`You say "${message}"`);
         },
 
         target: function (sender, target, message, colorify) {
-          return colorify(`${sender.name} says: '${message}'`);
+          return colorify(`${sender.name} says "${message}"`);
         }
       }
     }),
